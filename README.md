@@ -1,6 +1,6 @@
 
 
-# MOD 🎮 🚗
+# MOD 🎮 
 ## Experimental build release #
 ### Download:
 
