@@ -21,3 +21,8 @@ python colorize.py
 ```
 
 7. See the following results opening on a software capable to be able to read .ply (MeshLab, e.g.):
+
+
+### How to costumize:
+
+Go to LiDAR GTA V.cfg file and edit you settings and error.
