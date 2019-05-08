@@ -13,11 +13,18 @@ Simply press button to clone/download zip and then unzip
 3. Open GTA V
 4. Press F6
 5. Exit GTA V
-6. Copy script "colorized.py" and "LiDAR GTA V.cfg to your lidar pointclouds folder and run the script:
+6. Copy script "colorized.py" and "LiDAR GTA V.cfg to your lidar pointclouds folder and run the script for the ideal point cloud:
 
 ```
-python colorize.py
+python colorize.py LiDAR_PointCloud_points.txt
 
+
+```
+
+or the realistic point cloud with error:
+
+```
+python colorize.py LiDAR_PointCloud_error.txt
 
 ```
 
