@@ -40,7 +40,9 @@ Go to LiDAR GTA V.cfg file and edit you settings and error.
 <img src="https://i.imgur.com/HeCKTPx.png" width="500" eight="500">
 
 Pointcloud with no error:
-<img src="https://i.imgur.com/teTZHL8.png" width="500" eight="500">
+
+
+<img src="https://i.imgur.com/teTZHL8.png"width="500"eight="500">
 
 Pointcloud with error:
 
