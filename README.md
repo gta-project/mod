@@ -37,4 +37,4 @@ Go to LiDAR GTA V.cfg file and edit you settings and error.
 
 ### Some Samples:
 
-< img src="https://i.imgur.com/HeCKTPx.png"width="500" eight="500">
+< img src="https://i.imgur.com/HeCKTPx.png" width="500" eight="500">
