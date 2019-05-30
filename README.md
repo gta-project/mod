@@ -1,4 +1,4 @@
-
+﻿
 
 # GTA Project MOD 🎮 
 ## Experimental build release #
@@ -8,25 +8,11 @@ Simply press button to clone/download zip and then unzip
 ### How to install:
 
 1. You have to have GTA V and ScriptHook and  Installed
-2. Copy all "LiDAR GTA V.asi", to your game folder
+2. Copy the contents of "LiDAR GTA V\bin\Release", to your game folder
 3. Open GTA V
 4. Press F6
 5. Exit GTA V
-6. Copy script "colorized.py" and "LiDAR GTA V.cfg to your lidar pointclouds folder and run the script for the ideal point cloud:
-
-```
-python colorize.py LiDAR_PointCloud_points.txt
-
-
-```
-
-or the realistic point cloud with error:
-
-```
-python colorize.py LiDAR_PointCloud_error.txt
-
-```
-
+6. Run colorize_all.bat to fuse the point cloud with the camera images:
 7. See the following results opening on a software capable to be able to read .ply (MeshLab, e.g.):
 
 
