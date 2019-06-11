@@ -9,6 +9,9 @@ Simply press button to clone/download zip and then unzip
 
 1. You have to have GTA V and ScriptHook and  Installed
 2. Copy the contents of "LiDAR GTA V\bin\Release", to your game folder
+
+### How to use:
+
 3. Open GTA V
 4. Press F6
 5. Exit GTA V
