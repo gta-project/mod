@@ -12,11 +12,11 @@ Simply press button to clone/download zip and then unzip
 
 ### How to use:
 
-3. Open GTA V
-4. Press F6
-5. Exit GTA V
-6. Run colorize_all.bat to fuse the point cloud with the camera images:
-7. See the following results opening on a software capable to be able to read .ply (MeshLab, e.g.):
+1. Open GTA V
+2. Press F6
+3. Exit GTA V
+4. Run colorize_all.bat to fuse the point cloud with the camera images:
+5. See the following results opening on a software capable to be able to read .ply (MeshLab, e.g.):
 
 
 ### How to costumize:
