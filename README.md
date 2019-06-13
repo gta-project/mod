@@ -1,7 +1,7 @@
 ﻿
 
 # GTA Project MOD 🎮 
-## Experimental build release #
+## Final build release #
 ### Download:
 
 Simply press button to clone/download zip and then unzip
