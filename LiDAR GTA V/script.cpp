@@ -11,17 +11,64 @@
 #include <iostream>
 #include <windows.h>
 #include <gdiplus.h>
+#include <iterator>
+#include <random>
+#include "direct.h"
 
 #pragma comment(lib, "gdiplus.lib")
 
 #pragma warning(disable : 4244 4305) // double <-> float conversions
 
-#define StopSpeed 0.00001f
+#define StopSpeed 0.00000000001f
 #define NormalSpeed 1.0f
+
+static std::default_random_engine generator;
+static std::uniform_real_distribution<double> distribution(-1.0, 1.0);
 
 using namespace Gdiplus;
 
-void introduceError(Vector3* xyzError, double x, double y, double z, double error, int errorDist)
+std::vector<double> split(const std::string& s, char delimiter)
+{
+	std::vector<double> tokens;
+	std::string token;
+	std::istringstream tokenStream(s);
+	while (std::getline(tokenStream, token, delimiter))
+	{
+		tokens.push_back(std::stod(token));
+	}
+	return tokens;
+}
+
+void readErrorFile(std::vector<double>& dist, std::vector<double>& error) {
+	std::ifstream inputFile;
+	inputFile.open("LiDAR GTA V/dist_error.csv");
+	std::string errorDists, dists;
+	inputFile >> errorDists;
+	inputFile >> dists;
+
+	dist = split(dists, ',');
+	error = split(errorDists, ',');
+}
+
+double getError(std::vector<double>& dist, std::vector<double>& error, double r) {
+	int x = 0;
+	if (r == 0)
+		return 0.0;
+	int tmp = abs(r);
+	while (dist[x] <= tmp) {
+		if (dist[x] == tmp)
+			return error[x];
+		x++;
+	}
+	double fact;
+	if (x == 0) {
+		return 0;
+	}
+	fact = (abs(r) - dist[x - 1]) / (dist[x] - dist[x - 1]);
+	return (1 - fact) * error[x - 1] + (fact)* error[x];
+}
+
+void introduceError(Vector3* xyzError, double x, double y, double z, double error, int errorType, int range, std::vector<double>& dist_vector, std::vector<double>& error_vector)
 {
 	//Convert to spherical coordinates
 	double hxy = std::hypot(x, y);
@@ -29,12 +76,14 @@ void introduceError(Vector3* xyzError, double x, double y, double z, double erro
 	double el = std::atan2(z, hxy);
 	double az = std::atan2(y, x);
 
-	if (errorDist = 0)
-		r = r + 2 * ((rand() % 2) * 2 - 1) * error;
-	else
-		r = r + 2 * ((rand() % 2) * 2 - 1) * error * r;
-
-
+	if (errorType == 0)
+		r = r + distribution(generator) * error;
+	else if (errorType == 1)
+		r = r + distribution(generator) * error * r;
+	else {
+		if (r != 0)
+			r = r + distribution(generator) * getError(dist_vector, error_vector, r);
+	}
 
 	//Convert to cartesian coordinates
 	double rcos_theta = r * std::cos(el);
@@ -70,7 +119,7 @@ ray raycast(Vector3 source, Vector3 direction, float maxDistance, int intersectF
 	float targetX = source.x + (direction.x * maxDistance);
 	float targetY = source.y + (direction.y * maxDistance);
 	float targetZ = source.z + (direction.z * maxDistance);
-	int rayHandle = WORLDPROBE::_CAST_RAY_POINT_TO_POINT(source.x, source.y, source.z, targetX, targetY, targetZ, intersectFlags, 0, 7);
+	int rayHandle = WORLDPROBE::_CAST_RAY_POINT_TO_POINT(source.x, source.y, source.z, targetX, targetY, targetZ, intersectFlags, PLAYER::PLAYER_PED_ID(), 7);
 	int hit = 0;
 	int hitEntityHandle = -1;
 	Vector3 hitCoordinates;
@@ -117,12 +166,12 @@ ray angleOffsetRaycast(double angleOffsetX, double angleOffsetZ, int range) {
 	return result;
 }
 
-int GetEncoderClsid(WCHAR *format, CLSID *pClsid)
+int GetEncoderClsid(WCHAR* format, CLSID* pClsid)
 {
 	unsigned int num = 0, size = 0;
 	GetImageEncodersSize(&num, &size);
 	if (size == 0) return -1;
-	ImageCodecInfo *pImageCodecInfo = (ImageCodecInfo *)(malloc(size));
+	ImageCodecInfo* pImageCodecInfo = (ImageCodecInfo*)(malloc(size));
 	if (pImageCodecInfo == NULL) return -1;
 	GetImageEncoders(num, size, pImageCodecInfo);
 
@@ -137,7 +186,7 @@ int GetEncoderClsid(WCHAR *format, CLSID *pClsid)
 	return -1;
 }
 
-int SaveScreenshot(std::string filename, ULONG uQuality=100)
+int SaveScreenshot(std::string filename, ULONG uQuality = 100)
 {
 	ULONG_PTR gdiplusToken;
 	GdiplusStartupInput gdiplusStartupInput;
@@ -149,7 +198,7 @@ int SaveScreenshot(std::string filename, ULONG uQuality=100)
 	int nBPP, nCapture, iRes;
 	LPBYTE lpCapture;
 	CLSID imageCLSID;
-	Bitmap *pScreenShot;
+	Bitmap* pScreenShot;
 
 	// get the area of my application's window     
 	GetWindowRect(hMyWnd, &r);
@@ -163,7 +212,7 @@ int SaveScreenshot(std::string filename, ULONG uQuality=100)
 	BITMAPINFO bmiCapture = { sizeof(BITMAPINFOHEADER), w, -h, 1, nBPP, BI_RGB, 0, 0, 0, 0, 0, };
 
 	// create a container and take the screenshot
-	HBITMAP hbmCapture = CreateDIBSection(dc, &bmiCapture, DIB_PAL_COLORS, (LPVOID *)&lpCapture, NULL, 0);
+	HBITMAP hbmCapture = CreateDIBSection(dc, &bmiCapture, DIB_PAL_COLORS, (LPVOID*)& lpCapture, NULL, 0);
 
 	// failed to take it
 	if (!hbmCapture) {
@@ -192,7 +241,7 @@ int SaveScreenshot(std::string filename, ULONG uQuality=100)
 	encoderParams.Parameter[0].Value = &uQuality;
 	GetEncoderClsid(L"image/jpeg", &imageCLSID);
 
-	wchar_t *lpszFilename = new wchar_t[filename.length() + 1];
+	wchar_t* lpszFilename = new wchar_t[filename.length() + 1];
 	mbstowcs(lpszFilename, filename.c_str(), filename.length() + 1);
 
 	iRes = (pScreenShot->Save(lpszFilename, &imageCLSID, &encoderParams) == Ok);
@@ -204,6 +253,9 @@ int SaveScreenshot(std::string filename, ULONG uQuality=100)
 
 void lidar(double horiFovMin, double horiFovMax, double vertFovMin, double vertFovMax, double horiStep, double vertStep, int range, std::string filePath, double error, int errorDist, std::ofstream& log)
 {
+	std::vector<double> dist_vector, error_vector;
+	readErrorFile(dist_vector, error_vector);
+
 	Vector3 centerDot = ENTITY::GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(PLAYER::PLAYER_PED_ID(), 0, 0, 1.2);
 
 	int resolutionX, resolutionY;
@@ -224,9 +276,9 @@ void lidar(double horiFovMin, double horiFovMax, double vertFovMin, double vertF
 	int vertexCount = (horiFovMax - horiFovMin) * (1 / horiStep) * (vertFovMax - vertFovMin) * (1 / vertStep);
 	log << "Creating dynamic array size[" + std::to_string(vertexCount) + "]...";
 	Vector3* points = NULL;
-	points = new Vector3[vertexCount*1.5];
+	points = new Vector3[vertexCount * 1.5];
 	log << " Done.\n";
-	std::ofstream fileOutput, fileOutputPoints, fileOutputError,fileOutputErrorPoints;
+	std::ofstream fileOutput, fileOutputPoints, fileOutputError, fileOutputErrorPoints, fileOutputErrorDist, fileOutputRenato;
 	fileOutput.open(filePath + ".ply");
 	fileOutputPoints.open(filePath + "_points.txt");
 	fileOutputError.open(filePath + "_error.ply");
@@ -274,7 +326,7 @@ void lidar(double horiFovMin, double horiFovMax, double vertFovMin, double vertF
 		WAIT(200);
 
 		//Save screenshot
-		std::string filename = "LiDAR GTA V\\GTA_Camera_Print_Night_" + std::to_string(i) + ".bmp";
+		std::string filename = filePath + "_Camera_Print_Night_" + std::to_string(i) + ".bmp";
 		SaveScreenshot(filename.c_str());
 	}
 
@@ -292,7 +344,7 @@ void lidar(double horiFovMin, double horiFovMax, double vertFovMin, double vertF
 		WAIT(200);
 
 		//Save screenshot
-		std::string filename = "LiDAR GTA V\\GTA_Camera_Print_Cloudy_" + std::to_string(i) + ".bmp";
+		std::string filename = filePath + "_Camera_Print_Cloudy_" + std::to_string(i) + ".bmp";
 		SaveScreenshot(filename.c_str());
 	}
 
@@ -307,7 +359,7 @@ void lidar(double horiFovMin, double horiFovMax, double vertFovMin, double vertF
 		WAIT(200);
 
 		//Save screenshot
-		std::string filename = "LiDAR GTA V\\GTA_Camera_Print_Day_" + std::to_string(i) + ".bmp";
+		std::string filename = filePath + "_Camera_Print_Day_" + std::to_string(i) + ".bmp";
 		SaveScreenshot(filename.c_str());
 
 		log << "Converting 3D to 2D...";
@@ -319,9 +371,9 @@ void lidar(double horiFovMin, double horiFovMax, double vertFovMin, double vertF
 			GRAPHICS::_WORLD3D_TO_SCREEN2D(voxel.x, voxel.y, voxel.z, &x2d, &y2d);
 			//Introduce error in voxels
 			Vector3 xyzError;
-			introduceError(&xyzError, voxel.x, voxel.y, voxel.z, error, errorDist);
+			introduceError(&xyzError, voxel.x - centerDot.x, voxel.y - centerDot.y, voxel.z - centerDot.z, error, errorDist, range, dist_vector, error_vector);
 			//Get screen coordinates of 3D voxels w/ error
-			GRAPHICS::_WORLD3D_TO_SCREEN2D(xyzError.x, xyzError.y, xyzError.z, &err_x2d, &err_y2d);
+			GRAPHICS::_WORLD3D_TO_SCREEN2D(xyzError.x + centerDot.x, xyzError.y + centerDot.y, xyzError.z + centerDot.z, &err_x2d, &err_y2d);
 
 			if (x2d != -1 || y2d != -1) {
 				vertexDataPoints += std::to_string(voxel.x - centerDot.x) + " " + std::to_string(voxel.y - centerDot.y) + " " + std::to_string(voxel.z - centerDot.z) + " " + std::to_string(int(x2d * resolutionX * 1.5)) + " " + std::to_string(int(y2d * resolutionY * 1.5)) + " " + std::to_string(i) + "\n";
@@ -401,8 +453,10 @@ void ScriptMain()
 				inputFile >> ignore >> ignore >> errorDist;
 
 				inputFile.close();
+				std::string newfolder = "LiDAR GTA V/" + filename;
+				_mkdir(newfolder.c_str());
 				log << "Starting LiDAR...\n";
-				lidar(parameters[0], parameters[1], parameters[2], parameters[3], parameters[4], parameters[5], range, "LiDAR GTA V/" + filename, error, errorDist, log);
+				lidar(parameters[0], parameters[1], parameters[2], parameters[3], parameters[4], parameters[5], range, newfolder + "/" + filename, error, errorDist, log);
 				log << "SUCCESS!!!";
 				log.close();
 			}
